@@ -258,7 +258,7 @@ class PortfolioUpdater:
             sys.exit(1)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Automated Portfolio Synchronization & Update Tool")
+    parser = argparse.ArgumentParser(description="Automated Three-Body-Simulation Synchronization & Update Tool")
     parser.add_argument("-y", "--yes", action="store_true", help="Auto-confirm all prompts")
     parser.add_argument("--no-deploy", action="store_true", help="Skip deployment step")
     parser.add_argument("--no-commit", action="store_true", help="Skip git commit/push step")
