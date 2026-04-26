@@ -1,0 +1,6 @@
+{
+  "name": "Celestial Mechanics: Three-Body Simulator",
+  "description": "An interactive, visually aesthetic, and mathematically rigorous simulation of the three-body problem, demonstrating chaotic orbital mechanics and stable configurations like the Figure-8.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
