@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, Pause, RotateCcw, Info, SlidersHorizontal, ZoomIn, ZoomOut } from 'lucide-react';
+import { Play, Pause, RotateCcw, Info, SlidersHorizontal } from 'lucide-react';
 
 interface BodyParams {
   mass: number;
@@ -33,7 +33,8 @@ const PALETTES = [
   { name: 'Cyberpunk', colors: ['#00FFFF', '#FF007F', '#FFF100'] },
   { name: 'Ethereal', colors: ['#A7F3D0', '#C084FC', '#FDA4AF'] },
   { name: 'Inferno', colors: ['#ff4e00', '#ffcc00', '#ffffff'] },
-  { name: 'Monochrome', colors: ['#ffffff', '#9ca3af', '#4b5563'] }
+  { name: 'Monochrome', colors: ['#ffffff', '#9ca3af', '#4b5563'] },
+  { name: 'Aurora', colors: ['#4ade80', '#2dd4bf', '#818cf8'] }
 ];
 
 const TRAIL_STYLES = [
@@ -170,14 +171,13 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [showInfo, setShowInfo] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [trailLength, setTrailLength] = useState(240);
+  const [trailLength, setTrailLength] = useState(50);
   const [timeScale, setTimeScale] = useState(1.0);
-  const [gMultiplier, setGMultiplier] = useState(1.0);
   const [activePalette, setActivePalette] = useState(0);
   const [trailStyle, setTrailStyle] = useState('comet');
 
-  const settingsRef = useRef({ trailLength, timeScale, gMultiplier, trailStyle });
-  settingsRef.current = { trailLength, timeScale, gMultiplier, trailStyle };
+  const settingsRef = useRef({ trailLength, timeScale, trailStyle });
+  settingsRef.current = { trailLength, timeScale, trailStyle };
 
   const zoomTargetRef = useRef(1.0);
   const zoomCurrentRef = useRef(1.0);
@@ -325,7 +325,7 @@ export default function App() {
       
       const currentSettings = settingsRef.current;
       for(let s = 0; s < scenario.subSteps; s++) {
-        RK4.step(state.pos, state.vel, state.masses, scenario.G * currentSettings.gMultiplier, scenario.dt * currentSettings.timeScale);
+        RK4.step(state.pos, state.vel, state.masses, scenario.G, scenario.dt * currentSettings.timeScale);
       }
       
       // Smoothly interpolate zoom
@@ -350,10 +350,10 @@ export default function App() {
       ctx.globalCompositeOperation = 'screen';
       
       for(let i=0; i<numBodies; i++) {
-          const x = cx + (state.pos[i*2] - xCom) * currentScale;
-          const y = cy + (state.pos[i*2+1] - yCom) * currentScale;
+          const renderX = cx + (state.pos[i*2] - xCom) * currentScale;
+          const renderY = cy + (state.pos[i*2+1] - yCom) * currentScale;
           
-          state.history[i].push({x, y});
+          state.history[i].push({x: state.pos[i*2], y: state.pos[i*2+1]});
           const targetLength = settingsRef.current.trailLength;
           while (state.history[i].length > targetLength) {
               state.history[i].shift();
@@ -365,54 +365,73 @@ export default function App() {
           if (hist.length > 1) {
              if (curTrailStyle === 'stardust') {
                  // Dotted trail
-                 for (let j = 1; j < hist.length; j+=4) { // dot spacing
+                 for (let j = 1; j < hist.length; j+=2) { // dot spacing
                     const progress = j / hist.length;
                     const alpha = Math.pow(progress, 2) * 0.9;
                     const dotRadius = state.radii[i] * (0.2 + 0.6 * progress);
                     
+                    const hx = cx + (hist[j].x - xCom) * currentScale;
+                    const hy = cy + (hist[j].y - yCom) * currentScale;
+                    
                     ctx.beginPath();
-                    ctx.arc(hist[j].x, hist[j].y, dotRadius, 0, Math.PI * 2);
+                    ctx.arc(hx, hy, dotRadius, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(${state.colorsRgb[i]}, ${alpha})`;
                     ctx.fill();
                  }
-             } else {
-                 // Connected line trails
+             } else { // Connected trails
                  for (let j = 1; j < hist.length; j++) {
-                    ctx.beginPath();
-                    ctx.moveTo(hist[j-1].x, hist[j-1].y);
-                    ctx.lineTo(hist[j].x, hist[j].y);
+                    const prevX = cx + (hist[j-1].x - xCom) * currentScale;
+                    const prevY = cy + (hist[j-1].y - yCom) * currentScale;
+                    const renderHx = cx + (hist[j].x - xCom) * currentScale;
+                    const renderHy = cy + (hist[j].y - yCom) * currentScale;
                     
                     const progress = j / hist.length;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(renderHx, renderHy);
+                    ctx.lineCap = 'round';
                     
                     if (curTrailStyle === 'comet') {
                         const alpha = Math.pow(progress, 3);
                         ctx.strokeStyle = `rgba(${state.colorsRgb[i]}, ${alpha})`;
                         ctx.lineWidth = state.radii[i] * (0.1 + 1.2 * progress);
+                        ctx.stroke();
                     } else if (curTrailStyle === 'neon') {
-                        const alpha = progress * 0.7; // Linear fade
+                        const alpha = progress * 0.8; 
+                        
+                        // Outer Glow
                         ctx.strokeStyle = `rgba(${state.colorsRgb[i]}, ${alpha})`;
-                        ctx.lineWidth = state.radii[i] * 0.9;
+                        ctx.lineWidth = state.radii[i] * 2.0;
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = state.colors[i];
+                        ctx.stroke();
+
+                        // Inner Core
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha + 0.1})`;
+                        ctx.lineWidth = state.radii[i] * 0.5;
+                        ctx.shadowBlur = 0;
+                        ctx.stroke();
                     }
-                    
-                    ctx.lineCap = 'round';
-                    ctx.stroke();
                  }
              }
           }
           
+          // Reset shadow for heads just in case
+          ctx.shadowBlur = 0;
+          
           // Outer Glow at the current head
           ctx.beginPath();
-          ctx.arc(x, y, state.radii[i] * 1.2, 0, Math.PI * 2);
+          ctx.arc(renderX, renderY, state.radii[i] * 1.2, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${state.colorsRgb[i]}, 0.8)`;
           ctx.shadowBlur = Math.max(12, state.radii[i] * 2);
           ctx.shadowColor = state.colors[i];
           ctx.fill();
           
           // Inner core (bright)
-          ctx.beginPath();
-          ctx.arc(x, y, state.radii[i] * 0.5, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffffff';
           ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.arc(renderX, renderY, state.radii[i] * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
           ctx.fill();
       }
       
@@ -503,8 +522,7 @@ export default function App() {
                    <span className="text-[10px] uppercase tracking-widest text-white/40">Parameters</span>
                    <button onClick={() => { 
                       setTimeScale(1); 
-                      setGMultiplier(1); 
-                      setTrailLength(240); 
+                      setTrailLength(50); 
                       setActivePalette(0);
                       setTrailStyle('comet');
                       zoomTargetRef.current = 1.0;
@@ -565,24 +583,10 @@ export default function App() {
 
                    <div className="flex flex-col gap-3">
                       <div className="flex justify-between text-[10px] items-center">
-                        <span className="text-white/60 uppercase tracking-wider">Gravity (G)</span>
-                        <span className="font-mono text-white/40 bg-white/5 px-2 py-0.5 rounded">{gMultiplier.toFixed(2)}x</span>
-                      </div>
-                      <input type="range" min="0" max="3" step="0.05" value={gMultiplier} onChange={(e) => setGMultiplier(parseFloat(e.target.value))} className="w-full h-0.5 bg-white/20 appearance-none rounded-full outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.8)] [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.8)] cursor-pointer" />
-                   </div>
-
-                   <div className="flex flex-col gap-3">
-                      <div className="flex justify-between text-[10px] items-center">
                         <span className="text-white/60 uppercase tracking-wider">Trail Length</span>
                         <span className="font-mono text-white/40 bg-white/5 px-2 py-0.5 rounded">{trailLength}</span>
                       </div>
                       <input type="range" min="0" max="1000" step="10" value={trailLength} onChange={(e) => setTrailLength(parseInt(e.target.value))} className="w-full h-0.5 bg-white/20 appearance-none rounded-full outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2.5 [&::-webkit-slider-thumb]:h-2.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.8)] [&::-moz-range-thumb]:w-2.5 [&::-moz-range-thumb]:h-2.5 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(255,255,255,0.8)] cursor-pointer" />
-                   </div>
-
-                   <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 mt-1">
-                      <div className="text-[10px] text-white/40 uppercase tracking-wider flex items-center gap-2">
-                        <ZoomIn size={12} /> Scroll to Zoom <ZoomOut size={12} />
-                      </div>
                    </div>
                  </div>
                </motion.div>

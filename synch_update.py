@@ -12,7 +12,16 @@ from datetime import datetime
 # --- Configuration ---
 UPDATE_DIR = "___update"
 BACKUP_PREFIX = ".backup_synch_"
-FILES_TO_OVERWRITE = ["index.html", "tsconfig.json", "package-lock.json"]
+FILES_TO_OVERWRITE = [
+    "index.html", 
+    "tsconfig.json", 
+    "package-lock.json", 
+    "metadata.json", 
+    ".env.example", 
+    ".gitignore", 
+    "README.md",
+    ".nojekyll"
+]
 
 # --- Colors for Terminal ---
 class Colors:
@@ -63,9 +72,11 @@ class PortfolioUpdater:
         Colors.log(f"Creating safety backup at: {self.backup_path}...", "info")
         
         try:
-            # Backup src
-            if os.path.exists(os.path.join(self.root_dir, "src")):
-                shutil.copytree(os.path.join(self.root_dir, "src"), os.path.join(self.backup_path, "src"))
+            # Backup folders
+            for folder in ["src", "public"]:
+                src_folder = os.path.join(self.root_dir, folder)
+                if os.path.exists(src_folder):
+                    shutil.copytree(src_folder, os.path.join(self.backup_path, folder))
             
             # Backup configs
             for f in ["package.json", "vite.config.ts"] + FILES_TO_OVERWRITE:
@@ -83,16 +94,18 @@ class PortfolioUpdater:
 
         Colors.log("Restoring from backup due to failure...", "warn")
         try:
-            # Restore src
-            src_path = os.path.join(self.root_dir, "src")
-            if os.path.exists(src_path):
-                shutil.rmtree(src_path)
-            if os.path.exists(os.path.join(self.backup_path, "src")):
-                shutil.copytree(os.path.join(self.backup_path, "src"), src_path)
+            # Restore folders
+            for folder in ["src", "public"]:
+                dest_path = os.path.join(self.root_dir, folder)
+                if os.path.exists(dest_path):
+                    shutil.rmtree(dest_path)
+                backup_folder = os.path.join(self.backup_path, folder)
+                if os.path.exists(backup_folder):
+                    shutil.copytree(backup_folder, dest_path)
 
             # Restore configs
             for f in os.listdir(self.backup_path):
-                if f == "src": continue
+                if f in ["src", "public"]: continue
                 shutil.copy2(os.path.join(self.backup_path, f), os.path.join(self.root_dir, f))
             
             Colors.log("Restoration complete.", "success")
@@ -103,13 +116,19 @@ class PortfolioUpdater:
         """Cleanup backup and update directory."""
         if self.backup_path and os.path.exists(self.backup_path):
             if success:
-                shutil.rmtree(self.backup_path)
+                try:
+                    shutil.rmtree(self.backup_path)
+                except:
+                    pass
             else:
                 Colors.log(f"Backup kept at {self.backup_path} for manual inspection.", "info")
 
         if success and os.path.exists(self.update_path):
             Colors.log(f"Removing update directory '{UPDATE_DIR}'...", "info")
-            shutil.rmtree(self.update_path)
+            try:
+                shutil.rmtree(self.update_path)
+            except Exception as e:
+                Colors.log(f"Failed to remove update directory: {e}", "warn")
 
     def run_command(self, cmd, shell=True):
         """Run a shell command and handle errors."""
@@ -118,12 +137,16 @@ class PortfolioUpdater:
             subprocess.check_call(cmd, shell=shell)
         except subprocess.CalledProcessError:
             Colors.log(f"Command failed: {cmd}", "error")
-            raise Exception("Command execution failed")
+            raise Exception(f"Command execution failed: {cmd}")
 
     def merge_package_json(self):
         Colors.log("Smart merging package.json...", "info")
         old_path = os.path.join(self.root_dir, "package.json")
         new_path = os.path.join(self.update_path, "package.json")
+
+        if not os.path.exists(new_path):
+            Colors.log("No package.json found in update directory. Skipping merge.", "warn")
+            return
 
         with open(old_path, 'r') as f: old_pkg = json.load(f)
         with open(new_path, 'r') as f: new_pkg = json.load(f)
@@ -145,7 +168,11 @@ class PortfolioUpdater:
             if dep_type not in old_pkg: continue
             if dep_type not in new_pkg: new_pkg[dep_type] = {}
             
-            # Add local deps that are missing in new_pkg (like gh-pages)
+            # Preserve specific critical versions if requested
+            if dep_type == 'devDependencies' and 'gh-pages' in old_pkg[dep_type]:
+                new_pkg[dep_type]['gh-pages'] = old_pkg[dep_type]['gh-pages']
+
+            # Add local deps that are missing in new_pkg
             for dep, ver in old_pkg[dep_type].items():
                 if dep not in new_pkg[dep_type]:
                     new_pkg[dep_type][dep] = ver
@@ -158,6 +185,10 @@ class PortfolioUpdater:
         Colors.log("Smart merging vite.config.ts...", "info")
         old_path = os.path.join(self.root_dir, "vite.config.ts")
         new_path = os.path.join(self.update_path, "vite.config.ts")
+
+        if not os.path.exists(new_path):
+            Colors.log("No vite.config.ts found in update directory. Skipping merge.", "warn")
+            return
 
         with open(old_path, 'r') as f: old_content = f.read()
         with open(new_path, 'r') as f: new_content = f.read()
@@ -174,8 +205,6 @@ class PortfolioUpdater:
                 new_content = re.sub(r'base\s*:\s*(["\']).*?\1', base_full_line, new_content)
             else:
                 # Inject base into the return object of defineConfig
-                # This handles both defineConfig({}) and defineConfig(() => ({ ... }))
-                # Look for the first occurrence of 'return {' and inject after it
                 if "return {" in new_content:
                     new_content = new_content.replace("return {", f"return {{\n    {base_full_line},", 1)
                 elif "defineConfig({" in new_content:
@@ -188,7 +217,7 @@ class PortfolioUpdater:
 
     def get_git_branch(self):
         try:
-            branch = subprocess.check_output("git rev-parse --abbrev-ref HEAD", shell=True).decode().strip()
+            branch = subprocess.check_output("git rev-parse --abbrev-ref HEAD", shell=True, stderr=subprocess.DEVNULL).decode().strip()
             return branch
         except:
             return "main"
@@ -199,11 +228,15 @@ class PortfolioUpdater:
             self.create_backup()
 
             # 1. Source Migration
-            Colors.log("Migrating source files...", "info")
-            src_path = os.path.join(self.root_dir, "src")
-            if os.path.exists(src_path):
-                shutil.rmtree(src_path)
-            shutil.copytree(os.path.join(self.update_path, "src"), src_path)
+            Colors.log("Migrating source folders...", "info")
+            for folder in ["src", "public"]:
+                src_folder_path = os.path.join(self.update_path, folder)
+                if os.path.exists(src_folder_path):
+                    dest_folder_path = os.path.join(self.root_dir, folder)
+                    if os.path.exists(dest_folder_path):
+                        shutil.rmtree(dest_folder_path)
+                    shutil.copytree(src_folder_path, dest_folder_path)
+                    Colors.log(f"Migrated {folder} folder.", "info")
 
             # 2. Merges
             self.merge_package_json()
@@ -211,10 +244,17 @@ class PortfolioUpdater:
 
             # 3. Overwrites
             for f in FILES_TO_OVERWRITE:
-                Colors.log(f"Overwriting {f}...", "info")
-                shutil.copy2(os.path.join(self.update_path, f), os.path.join(self.root_dir, f))
+                src_f = os.path.join(self.update_path, f)
+                if os.path.exists(src_f):
+                    Colors.log(f"Overwriting {f}...", "info")
+                    shutil.copy2(src_f, os.path.join(self.root_dir, f))
+                else:
+                    # Special case: don't warn for missing package-lock as it's often generated
+                    if f != "package-lock.json":
+                        Colors.log(f"Skipping {f} (not in update folder)", "info")
 
             # 4. Install & Build
+            # Use npm.cmd on Windows if necessary, but shell=True usually handles it
             self.run_command("npm install")
             self.run_command("npm run build")
 
@@ -246,8 +286,13 @@ class PortfolioUpdater:
                     branch = self.get_git_branch()
                     Colors.log(f"Committing to branch '{branch}'...", "info")
                     self.run_command("git add .")
-                    self.run_command('git commit -m "chore: execute synch-update protocol"')
-                    self.run_command(f"git push origin {branch}")
+                    # Check if there are changes to commit
+                    status = subprocess.check_output("git status --porcelain", shell=True).decode().strip()
+                    if status:
+                        self.run_command('git commit -m "chore: execute synch-update protocol"')
+                        self.run_command(f"git push origin {branch}")
+                    else:
+                        Colors.log("No changes to commit.", "info")
 
             Colors.log("Synch-Update Protocol Completed Successfully.", "success")
 
