@@ -448,16 +448,16 @@ export default function App() {
   }, []);
 
   return (
-    <div className="w-screen h-screen bg-[#0A0A0C] text-[#E2E2E2] font-sans flex flex-col relative selection:bg-white/20 overflow-hidden">
+    <div className="w-full h-[100dvh] bg-[#0A0A0C] text-[#E2E2E2] font-sans flex flex-col relative selection:bg-white/20 overflow-hidden">
       <div className="absolute inset-0 opacity-10 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
       
       {/* Top Header Navigation */}
-      <nav className="h-16 border-b border-white/10 flex items-center justify-between px-8 z-10 bg-[#0A0A0C]/40 backdrop-blur-md relative">
-        <div className="flex items-center space-x-3">
-          <div className="w-6 h-6 border border-white/40 rotate-45 flex items-center justify-center text-[10px] font-bold">3B</div>
-          <h1 className="text-xs tracking-[0.3em] uppercase font-light hidden sm:block">Celestial Mechanics / <span className="font-semibold opacity-60">The Three-Body Problem</span></h1>
+      <nav className="h-14 sm:h-16 border-b border-white/10 flex items-center justify-between px-4 sm:px-8 z-20 bg-[#0A0A0C]/40 backdrop-blur-md relative">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="w-5 h-5 sm:w-6 sm:h-6 border border-white/40 rotate-45 flex items-center justify-center text-[9px] sm:text-[10px] font-bold">3B</div>
+          <h1 className="text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.3em] uppercase font-light truncate max-w-[220px] sm:max-w-none">Celestial <span className="hidden sm:inline">Mechanics</span> / <span className="font-semibold opacity-60">The Three-Body Problem</span></h1>
         </div>
-        <div className="flex space-x-6 text-[10px] uppercase tracking-widest text-white/50">
+        <div className="flex space-x-4 sm:space-x-6 text-[9px] sm:text-[10px] uppercase tracking-widest text-white/50">
           <span className="text-white border-b border-white/40 pb-1 cursor-pointer">Simulation</span>
         </div>
       </nav>
@@ -473,15 +473,15 @@ export default function App() {
                  initial={{ opacity: 0, x: -20 }}
                  animate={{ opacity: 1, x: 0 }}
                  exit={{ opacity: 0, x: -20 }}
-                 className="absolute top-12 left-12 w-64 space-y-8 z-10 pointer-events-none"
+                 className="absolute top-20 sm:top-24 mt-2 sm:mt-0 left-4 right-4 sm:left-12 sm:right-auto sm:w-72 space-y-6 sm:space-y-8 z-10 pointer-events-none"
               >
-                 <div className="pointer-events-auto">
-                    <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Current State</p>
+                 <div className="pointer-events-auto bg-[#0A0A0C]/60 sm:bg-transparent backdrop-blur-xl sm:backdrop-blur-none p-5 sm:p-0 rounded-2xl border border-white/10 sm:border-transparent">
+                    <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-white/40 mb-2 sm:mb-3">Current State</p>
                     <motion.h2 
                        key={`name-${activeScenario.id}`}
                        initial={{ opacity: 0 }}
                        animate={{ opacity: 1 }}
-                       className="text-2xl font-serif italic text-white/90 leading-tight"
+                       className="text-xl sm:text-2xl font-serif italic text-white/90 leading-tight"
                     >
                        {activeScenario.name}
                     </motion.h2>
@@ -489,14 +489,14 @@ export default function App() {
                        key={`desc-${activeScenario.id}`}
                        initial={{ opacity: 0 }}
                        animate={{ opacity: 1 }}
-                       className="text-xs text-white/50 leading-relaxed mt-3"
+                       className="text-[11px] sm:text-xs text-white/50 leading-relaxed mt-2 sm:mt-3"
                     >
                        {activeScenario.description}
                     </motion.p>
                  </div>
                  
-                 <div className="grid grid-cols-1 gap-4 pointer-events-auto">
-                    <div className="p-4 border border-white/5 bg-white/[0.02] rounded-sm">
+                 <div className="grid-cols-1 gap-4 pointer-events-auto hidden sm:grid">
+                    <div className="p-4 border border-white/5 bg-white/[0.02] rounded-sm backdrop-blur-md">
                        <div className="flex justify-between items-end">
                        <span className="text-[9px] uppercase tracking-tighter text-white/40">Gravitational Constant</span>
                        <span className="text-xs font-mono">G = {activeScenario.G.toExponential(2)}</span>
@@ -507,8 +507,8 @@ export default function App() {
            )}
         </AnimatePresence>
 
-        {/* Controls Container Bottom Right */}
-        <div className="absolute bottom-12 right-12 flex flex-col space-y-6 z-10 pointer-events-none items-end">
+        {/* Controls Container Bottom Center/Right */}
+        <div className="absolute bottom-6 sm:bottom-12 left-2 right-2 sm:left-auto sm:right-12 flex flex-col space-y-4 sm:space-y-6 z-20 pointer-events-none items-center sm:items-end">
            
            <AnimatePresence>
              {showSettings && (
@@ -516,7 +516,7 @@ export default function App() {
                  initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                  exit={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-                 className="w-64 p-6 bg-[#141417]/80 backdrop-blur-xl border border-white/10 rounded-2xl pointer-events-auto shadow-2xl flex flex-col gap-6 origin-bottom-right"
+                 className="w-full max-w-[340px] sm:w-72 p-5 sm:p-6 bg-[#141417]/90 backdrop-blur-2xl border border-white/10 rounded-3xl pointer-events-auto shadow-2xl flex flex-col gap-6 origin-bottom sm:origin-bottom-right"
                >
                  <div className="flex justify-between items-center">
                    <span className="text-[10px] uppercase tracking-widest text-white/40">Parameters</span>
@@ -529,7 +529,7 @@ export default function App() {
                    }} className="text-[9px] uppercase hover:text-white text-white/30 transition-colors">Reset</button>
                  </div>
                  
-                 <div className="flex flex-col gap-5 overflow-y-auto max-h-[60vh] pr-1 -mr-1 custom-scrollbar">
+                 <div className="flex flex-col gap-5">
                    {/* Aesthetics Section */}
                    <div className="flex flex-col gap-3">
                       <div className="flex justify-between text-[10px] items-center">
@@ -593,62 +593,69 @@ export default function App() {
              )}
            </AnimatePresence>
 
-           <div className="flex justify-end items-center space-x-3 pointer-events-auto">
-              <div className="text-right mr-2 hidden sm:block">
-                <p className="text-[9px] uppercase tracking-widest text-white/40">Observer View</p>
-                <p className="text-[11px] font-medium uppercase text-white/70">Eulerian Frame</p>
-              </div>
-              <button 
-                 onClick={() => setShowSettings(!showSettings)} 
-                 className={`w-10 h-10 border border-white/20 flex items-center justify-center rounded-full cursor-pointer hover:bg-white/5 transition-colors ${showSettings ? 'text-white bg-white/10' : 'text-white/40'}`}
-                 title="Simulation Parameters"
-              >
-                 <SlidersHorizontal size={16} strokeWidth={1.5} />
-              </button>
-              <button 
-                 onClick={() => setShowInfo(!showInfo)} 
-                 className={`w-10 h-10 border border-white/20 flex items-center justify-center rounded-full cursor-pointer hover:bg-white/5 transition-colors ${showInfo ? 'text-white' : 'text-white/40'}`}
-                 title="Toggle Info"
-              >
-                 <Info size={16} strokeWidth={1.5} />
-              </button>
-              <button 
-                 onClick={resetState} 
-                 className="w-10 h-10 border border-white/20 flex items-center justify-center rounded-full cursor-pointer hover:bg-white/5 text-white/40 transition-colors"
-                 title="Reset"
-              >
-                 <RotateCcw size={16} strokeWidth={1.5} />
-              </button>
-              <button 
-                 onClick={() => setIsPlaying(!isPlaying)} 
-                 className="w-10 h-10 border border-white/20 flex items-center justify-center rounded-full cursor-pointer hover:bg-white/5 text-white/80 transition-colors"
-                 title={isPlaying ? "Pause" : "Play"}
-              >
-                 {isPlaying ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current ml-0.5" />} 
-              </button>
-           </div>
-
-           {/* Scenario Pills Segmented Control */}
-           <div className="bg-[#141417] p-1 rounded-full border border-white/10 flex pointer-events-auto">
-              {SCENARIOS.map(s => (
+           <div className="flex flex-col gap-4 sm:gap-6 w-full sm:w-auto items-center sm:items-end">
+              <div className="flex justify-center sm:justify-end items-center space-x-2 sm:space-x-3 pointer-events-auto bg-[#141417]/60 sm:bg-transparent backdrop-blur-xl sm:backdrop-blur-none p-1.5 sm:p-0 rounded-full border border-white/10 sm:border-transparent">
+                 <div className="text-right mr-2 hidden sm:block">
+                   <p className="text-[9px] uppercase tracking-widest text-white/40">Observer View</p>
+                   <p className="text-[11px] font-medium uppercase text-white/70">Eulerian Frame</p>
+                 </div>
                  <button 
-                    key={s.id} 
-                    onClick={() => {
-                       setActiveScenario(s);
-                       setIsPlaying(true);
-                    }}
-                    className={`px-6 py-2 rounded-full text-[10px] uppercase tracking-widest transition-colors ${
-                       activeScenario.id === s.id ? 'bg-white/10 text-white font-medium shadow-xl' : 'text-white/40 hover:text-white'
-                    }`}
+                    onClick={() => setShowInfo(!showInfo)} 
+                    className={`w-10 h-10 border sm:border-white/20 border-transparent flex items-center justify-center rounded-full cursor-pointer hover:bg-white/5 transition-colors ${showInfo ? 'text-white sm:bg-white/10' : 'text-white/40'}`}
+                    title="Toggle Info"
                  >
-                    {s.name}
+                    <Info size={16} strokeWidth={1.5} />
                  </button>
-              ))}
+                 <button 
+                    onClick={resetState} 
+                    className="w-10 h-10 border sm:border-white/20 border-transparent flex items-center justify-center rounded-full cursor-pointer hover:bg-white/5 text-white/40 transition-colors"
+                    title="Reset"
+                 >
+                    <RotateCcw size={16} strokeWidth={1.5} />
+                 </button>
+                 <button 
+                    onClick={() => setShowSettings(!showSettings)} 
+                    className={`w-10 h-10 border sm:border-white/20 border-transparent flex items-center justify-center rounded-full cursor-pointer hover:bg-white/5 transition-colors ${showSettings ? 'text-white bg-white/10 sm:bg-white/10' : 'text-white/40'}`}
+                    title="Simulation Parameters"
+                 >
+                    <SlidersHorizontal size={16} strokeWidth={1.5} />
+                 </button>
+                 <div className="w-[1px] h-6 bg-white/10 mx-1 sm:hidden"></div>
+                 <button 
+                    onClick={() => setIsPlaying(!isPlaying)} 
+                    className="w-10 h-10 sm:w-12 sm:h-12 border sm:border-white/20 border-transparent bg-white/10 sm:bg-white/5 flex items-center justify-center rounded-full cursor-pointer hover:bg-white/15 text-white/90 transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)]"
+                    title={isPlaying ? "Pause" : "Play"}
+                 >
+                    {isPlaying ? <Pause size={14} className="fill-current" /> : <Play size={14} className="fill-current ml-0.5" />} 
+                 </button>
+              </div>
+   
+              {/* Scenario Pills Segmented Control */}
+              <div className="w-full sm:w-auto px-2 sm:px-0 pointer-events-auto">
+                 <div className="bg-[#141417]/80 backdrop-blur-xl p-1.5 rounded-full border border-white/10 flex overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] touch-pan-x items-center">
+                    <div className="flex gap-1 mx-auto min-w-max">
+                       {SCENARIOS.map(s => (
+                          <button 
+                             key={s.id} 
+                             onClick={() => {
+                                setActiveScenario(s);
+                                setIsPlaying(true);
+                             }}
+                             className={`px-5 sm:px-6 py-2.5 sm:py-2 rounded-full text-[9px] sm:text-[10px] uppercase tracking-widest transition-colors whitespace-nowrap ${
+                                activeScenario.id === s.id ? 'bg-white/10 text-white font-medium shadow-md' : 'text-white/40 hover:text-white hover:bg-white/5'
+                             }`}
+                          >
+                             {s.name}
+                          </button>
+                       ))}
+                    </div>
+                 </div>
+              </div>
            </div>
         </div>
 
         {/* Body mass info in the bottom-left */}
-        <div className="absolute bottom-12 left-12 z-10 pointer-events-none hidden sm:block">
+        <div className="absolute bottom-6 left-6 z-10 pointer-events-none hidden md:block">
           <div className="flex items-center space-x-6">
              {activeScenario.bodies.map((b, i) => {
                 const paletteColors = PALETTES[activePalette].colors;
@@ -665,7 +672,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="h-12 border-t border-white/5 flex items-center justify-between px-8 text-[9px] uppercase tracking-widest text-white/20 relative z-10 bg-[#0A0A0C]/40 backdrop-blur-sm">
+      <footer className="h-12 border-t border-white/5 items-center justify-between px-8 text-[9px] uppercase tracking-widest text-white/20 relative z-10 bg-[#0A0A0C]/40 backdrop-blur-sm hidden sm:flex">
         <span>Simulation Realtime v1.0.4</span>
         <div className="flex space-x-8">
           <span>RK4 Integrator</span>

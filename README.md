@@ -1,20 +1,39 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Celestial Mechanics: Three-Body Problem Simulator
 
-# Run and deploy your AI Studio app
+A stunning, interactive visualization of the classical N-body problem, specifically tailored for the chaotic and hypnotic behavior of the Three-Body Problem.
 
-This contains everything you need to run your app locally.
+## Overview
 
-View your app in AI Studio: https://ai.studio/apps/0153b548-c7b5-403e-8474-1788a74ede10
+This application provides a real-time, high-performance simulation of gravitational interactions between three celestial bodies. Using an **RK4 (Runge-Kutta 4th Order)** integration method, the simulation offers superior stability and accuracy compared to standard Euler integration, allowing for the observation of complex, long-running orbital trajectories.
 
-## Run Locally
+## Key Features
 
-**Prerequisites:**  Node.js
+*   **Interactive Simulation**: Choose between multiple preset scenarios or customize physical parameters.
+*   **Performance-Optimized**: Built to run smoothly in modern browsers using HTML5 Canvas.
+*   **RK4 Integration**: Accurate numeric simulation for stable complex orbits.
+*   **Responsive Interface**: Designed for a seamless, stunning experience across mobile and desktop devices.
+*   **Stylized Visualization**: Aesthetic controls including color palettes, trail decay, and gravitational field visualization.
+*   **Customization**: Adjust the Gravitational Constant (`G`), Time steps, and simulation speed in real-time.
 
+## Tech Stack
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+*   **Framework**: React 18, TypeScript, Vite.
+*   **Styling**: Tailwind CSS for a modern, minimalist dark-themed UI.
+*   **Animations**: `motion/react` for fluid UI transitions.
+*   **Icons**: `lucide-react`.
+
+## Getting Started
+
+1.  **Clone the repository.**
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+3.  **Run the development server**:
+    ```bash
+    npm run dev
+    ```
+
+## License
+
+This project is open-source. Feel free to explore, learn, and modify the parameters to discover new stable chaotic orbits!
